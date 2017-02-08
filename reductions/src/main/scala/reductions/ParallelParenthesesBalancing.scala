@@ -15,7 +15,7 @@ object ParallelParenthesesBalancingRunner {
     Key.exec.maxWarmupRuns -> 80,
     Key.exec.benchRuns -> 120,
     Key.verbose -> true
-  ) withWarmer(new Warmer.Default)
+  ) withWarmer (new Warmer.Default)
 
   def main(args: Array[String]): Unit = {
     val length = 100000000
@@ -39,24 +39,53 @@ object ParallelParenthesesBalancingRunner {
 object ParallelParenthesesBalancing {
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
-   */
+    */
   def balance(chars: Array[Char]): Boolean = {
-    ???
+    def balanceIter(bal: Int, chars: Array[Char]): Int = {
+      if (chars.isEmpty) bal else {
+        if (chars.head == ')' && bal <= 0)
+        // if we ever encounter a ) without any preceeding ( it is already unbalanced, skip the rest
+          balanceIter(-1, Array[Char]())
+        else if (chars.head == '(')
+          balanceIter(bal + 1, chars.tail)
+        else if (chars.head == ')')
+          balanceIter(bal - 1, chars.tail)
+        else
+          balanceIter(bal, chars.tail)
+      }
+    }
+
+    balanceIter(0, chars) == 0
   }
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
-   */
+    */
   def parBalance(chars: Array[Char], threshold: Int): Boolean = {
-
-    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int) /*: ???*/ = {
-      ???
+    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int): (Int, Int) = {
+      if (idx == until) {
+        (arg1, arg2)
+      }
+      else {
+        if (chars(idx) == '(')
+          traverse(idx + 1, until, arg1 + 1, arg2)
+        else if (chars(idx) == ')')
+          traverse(idx + 1, until, arg1 - 1, Math.min(arg2, arg1 - 1))
+        else
+          traverse(idx + 1, until, arg1, arg2)
+      }
     }
 
-    def reduce(from: Int, until: Int) /*: ???*/ = {
-      ???
+    def reduce(from: Int, until: Int): (Int, Int) = {
+      val length = until - from
+      if (threshold > 0 && length > threshold) {
+        val result = parallel(reduce(from, length / 2), reduce(length / 2, until))
+        (result._1._1 + result._2._1, Math.min(result._1._2 , result._2._2))
+      } else {
+        traverse(from, length, 0, 0)
+      }
     }
 
-    reduce(0, chars.length) == ???
+    reduce(0, chars.length) == (0,0)
   }
 
   // For those who want more:

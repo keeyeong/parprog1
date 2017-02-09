@@ -47,7 +47,7 @@ class ParallelParenthesesBalancingSuite extends FunSuite {
 
   test("parBalance should work for empty string") {
     def check(input: String, expected: Boolean) =
-      assert(parBalance(input.toArray, 0) == expected,
+      assert(parBalance(input.toArray, 2) == expected,
         s"parBalance($input) should be $expected")
 
     check("", true)
@@ -55,7 +55,7 @@ class ParallelParenthesesBalancingSuite extends FunSuite {
 
   test("parBalance should work for string of length 1") {
     def check(input: String, expected: Boolean) =
-      assert(parBalance(input.toArray, 0) == expected,
+      assert(parBalance(input.toArray, 3) == expected,
         s"parBalance($input) should be $expected")
 
     check("(", false)
@@ -65,7 +65,7 @@ class ParallelParenthesesBalancingSuite extends FunSuite {
 
   test("parBalance should work for string of length 2") {
     def check(input: String, expected: Boolean) =
-      assert(parBalance(input.toArray, 0) == expected,
+      assert(parBalance(input.toArray, 3) == expected,
         s"parBalance($input) should be $expected")
 
     check("()", true)
@@ -77,6 +77,8 @@ class ParallelParenthesesBalancingSuite extends FunSuite {
     check("(.", false)
     check(").", false)
     check("))()()((", false)
+    check("(((())()()(())))", true)
+    check("((test)(c+x)-4)((((4)444)---)xx(x)x)", true)
   }
 
 }

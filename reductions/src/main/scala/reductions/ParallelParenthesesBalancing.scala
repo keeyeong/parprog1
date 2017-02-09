@@ -61,31 +61,41 @@ object ParallelParenthesesBalancing {
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
     */
   def parBalance(chars: Array[Char], threshold: Int): Boolean = {
-    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int): (Int, Int) = {
+    def traverse(idx: Int, until: Int, unmatchedLeft: Int, unmatchedRight: Int): (Int, Int) = {
       if (idx == until) {
-        (arg1, arg2)
+        (unmatchedLeft, unmatchedRight)
       }
       else {
-        if (chars(idx) == '(')
-          traverse(idx + 1, until, arg1 + 1, arg2)
-        else if (chars(idx) == ')')
-          traverse(idx + 1, until, arg1 - 1, Math.min(arg2, arg1 - 1))
-        else
-          traverse(idx + 1, until, arg1, arg2)
+        if (chars(idx) == '(') {
+          traverse(idx + 1, until, unmatchedLeft + 1, unmatchedRight)
+        } else if (chars(idx) == ')') {
+          if (unmatchedLeft > 0)
+            traverse(idx + 1, until, unmatchedLeft - 1, unmatchedRight)
+          else
+            traverse(idx + 1, until, unmatchedLeft, unmatchedRight + 1)
+        } else {
+          traverse(idx + 1, until, unmatchedLeft, unmatchedRight)
+        }
       }
     }
 
     def reduce(from: Int, until: Int): (Int, Int) = {
-      val length = until - from
-      if (threshold > 0 && length > threshold) {
-        val result = parallel(reduce(from, length / 2), reduce(length / 2, until))
-        (result._1._1 + result._2._1, Math.min(result._1._2 , result._2._2))
+      val mid = from + ((until - from) / 2)
+      if (threshold > 0 && until - from > threshold) {
+        val (resLeft, resRight) = parallel(reduce(from, mid), reduce(mid, until))
+        // result from left can be balanced with result from right if left has ( and right has )
+        // otherwise add them up for the next combine
+        if (resLeft._1 > 0 && resRight._2 > 0) {
+          if (resLeft._1 - resRight._2 > 0) (resLeft._1 - resRight._2, resLeft._2) else (resRight._1, resRight._2 - resLeft._1)
+        } else {
+          (resLeft._1 + resRight._1, resLeft._2 + resRight._2)
+        }
       } else {
-        traverse(from, length, 0, 0)
+        traverse(from, until, 0, 0)
       }
     }
 
-    reduce(0, chars.length) == (0,0)
+    reduce(0, chars.length) == (0, 0)
   }
 
   // For those who want more:
